@@ -7,35 +7,66 @@ exposureRatio = 2;
 
 load('gfun.mat');
 
-%% plot g function
+%%% plot g function
 subplot(2,1,1);
 plot(gfun);
 subplot(2,1,2);
 plot(2.^gfun);
-
-
-%% read in pictures
+%%
+% read in pictures
 for i=1:14
     pictures(:,:,:,i) = imread(strcat('Img',num2str(i),'.tiff'));
     gPictures(:,:,i) = rgb2gray(pictures(:,:,:,i));
 end
 
-
+% get max/median/min values
 hiIntVal = max(max(gPictures(:,:,1)));
-[hiIntX, hiIntY] = find (gPictures(:,:,1) == hiIntVal);
+[hiIntY, hiIntX] = find (gPictures(:,:,1) == hiIntVal);
 loIntVal = min(min(gPictures(:,:,14)));
-[loIntX, loIntY] = find (gPictures(:,:,14) == loIntVal);
+[loIntY, loIntX] = find (gPictures(:,:,14) == loIntVal);
 medianGray = median(median(gPictures(:,:,9)));
-[medianGrayX, medianGrayY] = find(gPictures(:,:,9) == medianGray);
+[medianGrayY, medianGrayX] = find(gPictures(:,:,9) == medianGray);
 
-
+% get ALL the values!
 for i=1:14
-    hiIntValues(:,i) = gPictures(hiIntX, hiIntY, i);
-    loIntValues(:,i) = gPictures(loIntX(1,1), loIntY(1,1), i);
-    medianValues(:,i) = gPictures(medianGrayX(1,1), medianGrayY(1,1), i);
+    hiIntValues(i) = gPictures(hiIntY, hiIntX, i);
+    loIntValues(i) = gPictures(loIntY(1,1), loIntX(1,1), i);
+    medianValues(i) = gPictures(medianGrayY(1,1), medianGrayX(1,1), i);
 end
 
-plot(hiIntValues, 'r');
-hold on
-plot(loIntValues, 'g');
-plot(medianValues, 'b');
+%%% Plot hi,low and median
+% figure
+% plot(hiIntValues, 'r')
+% hold on
+% plot(medianValues, 'g')
+% plot(loIntValues, 'b')
+tic
+irradiancePictures = double(pictures);
+finv= (2.^gfun);
+for pic=1:14
+    
+    for y=1:683
+        for x=1:1024
+             for c=1:3
+                value = pictures(y,x,c,pic)+1;
+                irValue = finv(value,c)/(2*pic);
+                if(irValue > 0.5)
+                    irValue = 1 - irValue;
+                end
+
+                irradiancePictures(y,x,c,pic) = irValue;
+            end
+        end
+    end
+    
+    %imwrite(irradiancePictures(:,:,:,pic), strcat('pics/ir',num2str(pic),'.png'))
+    %imwrite(weightedPictures(:,:,:,pic), strcat('pics/w',num2str(pic),'.png'))
+end
+
+finalpic = irradiancePictures(:,:,:,1);
+
+for pic=2:14
+   finalpic = imadd(finalpic,irradiancePictures(:,:,:,pic));
+end
+imshow(tonemap(finalpic));
+toc
