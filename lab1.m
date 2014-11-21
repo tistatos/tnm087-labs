@@ -41,26 +41,36 @@ end
 % plot(medianValues, 'g')
 % plot(loIntValues, 'b')
 tic
-irradiancePictures = double(pictures);
-finv= (2.^gfun);
+
+
+weight = pictures;
 for pic=1:14
-    
     for y=1:683
         for x=1:1024
-             for c=1:3
-                value = pictures(y,x,c,pic)+1;
-                irValue = finv(value,c)/(2*pic);
-                if(irValue > 0.5)
-                    irValue = 1 - irValue;
+            for c=1:3
+                value = pictures(y,x,c,pic);
+                if(value > (255/2))
+                    value = 255-value;
                 end
-
-                irradiancePictures(y,x,c,pic) = irValue;
+                weight(y,x,c,pic) = value;
             end
         end
     end
-    
-    %imwrite(irradiancePictures(:,:,:,pic), strcat('pics/ir',num2str(pic),'.png'))
-    %imwrite(weightedPictures(:,:,:,pic), strcat('pics/w',num2str(pic),'.png'))
+end
+
+weightPic = weight(:,:,:,1);
+for pic=2:14
+   weightPic = weightPic + weight(:,:,:,pic);
+end
+
+weightPic= double(weightPic)/255;
+
+irradiancePictures = double(pictures);
+finv= (2.^gfun);
+for pic=1:14
+    value = pictures(:,:,:,pic);
+    irValue = finv(value+1)/(2*(pic));
+    irradiancePictures(:,:,:,pic) = irValue.*weightPic(:,:,:);
 end
 
 finalpic = irradiancePictures(:,:,:,1);
