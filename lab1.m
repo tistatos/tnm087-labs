@@ -53,19 +53,12 @@ tic
 %calculate weight image (could be done with one pic-loop but it doesnt seem to work)
 weight = pictures;
 for pic=1:14
-    for y=1:683
-        for x=1:1024
-            for c=1:3
-
-                value = pictures(y,x,c,pic);
-                %weight if value is greater than 128
-                if(value > 128)
-                    value = 255-value;
-                end
-                weight(y,x,c,pic) = value;
-            end
-        end
+    value = pictures(:,:,:,pic);
+    %weight if value is greater than 128
+    if(value > 128)
+        value = 255-value;
     end
+    weight(:,:,:,pic) = value;
 end
 
 %summarize all pictures in to one weight picture
