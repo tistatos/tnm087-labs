@@ -69,10 +69,10 @@ RedChannel = RedEyes(:,:,1);
 imshow(RedChannel);
 
 RedChannel = double(RedChannel)/255;
-squareFilter = ones(32);
+squareFilter = ones(64);
 
-MFilterImage = imfilter(RedChannel, squareFilter, 'conv');
-EyeFilterImage = imfilter(RedChannel, RedEyeMask, 'corr');
+MFilterImage = imfilter(RedChannel, squareFilter);
+EyeFilterImage = imfilter(RedChannel, RedEyeMask);
 
 combinedFilterImage = EyeFilterImage./MFilterImage;
 
@@ -81,8 +81,37 @@ imshow(MFilterImage/max(max(MFilterImage)));
 
 imshow(combinedFilterImage/max(max(combinedFilterImage)));
 
-quantvalues = quantile(quantile(combinedFilterImage, 1), 1);
+quantvalues = quantile(quantile(combinedFilterImage, 0.985), 0.985);
 
-combinedFilterImage = combinedFilterImage == quantvalues;
+combinedFilterImage = combinedFilterImage >= quantvalues;
 BW = imregionalmax(combinedFilterImage);
+%imshowpair(BW, RedEyes);
 imshow(BW);
+
+%% Exercise 3
+GIM = imread('GCPins512.jpg');
+HIM = imread('GHPins512.jpg');
+
+imshow(GIM);
+[GX, GY] = ginput(3);
+for k= 1:3
+    text(GX(k),GY(k),num2str(k));
+end
+hold on
+figure
+imshow(HIM);
+[HX, HY] = ginput(3);
+
+GC = [GX'; GY'; 1 1 1;]';
+HC = [HX'; HY'; 1 1 1;]';
+
+x = mldivide(GC,HC);
+c = affine2d(x);
+
+Rcb = imref2d(size(GIM))
+
+transFormedImage = imwarp(GIM, c, 'OutputView', Rcb);
+
+imshowpair(transFormedImage, HIM);
+
+
