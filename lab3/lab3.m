@@ -8,9 +8,12 @@ pictures(:,:,4) = double(rgb2gray(imread('HalfSony.jpg')));
 
 SharpWeight = zeros (1, 512);
 for i=1:255
-    SharpWeight(256-i) = i/25;
-    SharpWeight(257+i) = i/25;
+    SharpWeight(256-i) = i/255;
+    SharpWeight(257+i) = i/255;
 end
+
+%{
+plot(SharpWeight)
 
 for i = 1:4
     pictures(:,:,i) = pictures(:,:,i)/max(max(pictures(:,:,i)));
@@ -19,11 +22,16 @@ for i = 1:4
     ShiftedImages = ShiftedImages/ShiftedImages(256);
     Sharpness(i) = sum(abs(ShiftedImages).*SharpWeight);
 end
-
+%}
 HalfCanon = pictures(:,:,1)/max(max(pictures(:,:,1)));
 HalfHolga = pictures(:,:,2)/max(max(pictures(:,:,2)));
 HalfScanner = pictures(:,:,3)/max(max(pictures(:,:,3)));
 HalfSony = pictures(:,:,4)/max(max(pictures(:,:,4)));
+
+HalfCanon = mat2gray(HalfCanon);
+HalfHolga = mat2gray(HalfHolga);
+HalfScanner = mat2gray(HalfScanner);
+HalfSony = mat2gray(HalfSony);
 
 EdgeCanon = HalfCanon(1:50, :);
 EdgeHolga = HalfHolga(1:50, :);
@@ -45,16 +53,17 @@ FFT1EdgeSony = fftshift(fft(padSony));
 %plot(real(FFT1EdgeScanner), imag(FFT1EdgeScanner));
 %plot(real(FFT1EdgeSony), imag(FFT1EdgeSony));
 
-AbsFFT1EdgeCanon = abs(FFT1EdgeCanon/FFT1EdgeCanon(256));
-AbsFFT1EdgeHolga = abs(FFT1EdgeHolga/FFT1EdgeHolga(256));
-AbsFFT1EdgeScanner = abs(FFT1EdgeScanner/FFT1EdgeScanner(256));
-AbsFFT1EdgeSony = abs(FFT1EdgeSony/FFT1EdgeSony(256));
+AbsFFT1EdgeCanon = abs(FFT1EdgeCanon./FFT1EdgeCanon(256));
+AbsFFT1EdgeHolga = abs(FFT1EdgeHolga./FFT1EdgeHolga(256));
+AbsFFT1EdgeScanner = abs(FFT1EdgeScanner./FFT1EdgeScanner(256));
+AbsFFT1EdgeSony = abs(FFT1EdgeSony./FFT1EdgeSony(256));
 
 CanonSharp = sum(AbsFFT1EdgeCanon.*SharpWeight);
 HolgaSharp = sum(AbsFFT1EdgeHolga.*SharpWeight);
 ScannerSharp = sum(AbsFFT1EdgeScanner.*SharpWeight);
 SonySharp = sum(AbsFFT1EdgeSony.*SharpWeight);
 
+plot(SharpWeight)
 T1 = table(CanonSharp, HolgaSharp, ScannerSharp, SonySharp);
 
 %Sharpness
@@ -70,10 +79,10 @@ EdgeHolga2 = fftshift(fft2(EdgeHolga2));
 EdgeScanner2 = fftshift(fft2(EdgeScanner2));
 EdgeSony2 = fftshift(fft2(EdgeSony2));
 
-AbsEdgeCanon2 = abs(EdgeCanon2/EdgeCanon2(256));
-AbsEdgeHolga2 = abs(EdgeHolga2/EdgeHolga2(256));
-AbsEdgeScanner2 = abs(EdgeScanner2/EdgeScanner2(256));
-AbsEdgeSony2 = abs(EdgeSony2/EdgeSony(256));
+AbsEdgeCanon2 = abs(EdgeCanon2./EdgeCanon2(256));
+AbsEdgeHolga2 = abs(EdgeHolga2./EdgeHolga2(256));
+AbsEdgeScanner2 = abs(EdgeScanner2./EdgeScanner2(256));
+AbsEdgeSony2 = abs(EdgeSony2./EdgeSony(256));
 
 %plot(AbsEdgeCanon2, 'red');
 %hold on
@@ -85,8 +94,8 @@ AbsEdgeSony2 = abs(EdgeSony2/EdgeSony(256));
 
 SharpWeight = zeros (1, 100);
 for i=1:50
-    SharpWeight(51-i) = i/5;
-    SharpWeight(50+i) = i/5;
+    SharpWeight(51-i) = i/50;
+    SharpWeight(50+i) = i/50;
 end
 
 %Calculate sharpness
@@ -103,12 +112,11 @@ QR = uint8(round(100*(SR./max(SR(:)))));
 for m = 1:100  
     Maskm = (QR == m);
     masksum = sum(sum(Maskm));
+    
     CanonMask = AbsEdgeCanon2(Maskm == 1);
     HolgaMask = AbsEdgeHolga2(Maskm == 1);
     ScannerMask = AbsEdgeScanner2(Maskm == 1);
     SonyMask = AbsEdgeSony2(Maskm == 1);
-
-   
 
     CanonMaskAvg(m) = mean(CanonMask); 
     HolgaMaskAvg(m) = mean(HolgaMask);
